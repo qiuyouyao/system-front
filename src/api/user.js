@@ -22,3 +22,36 @@ export function logout() {
     method: 'post'
   })
 }
+
+
+export function pageUsers(params) {
+  return request({
+    url: '/admin/user/page',
+    method: 'get',
+    params
+  })
+}
+
+
+export function deleteUser(id) {
+  return request({
+    url: `/admin/user/delete/${id}`,
+    method: 'post'
+  })
+}
+
+export function updateUser(data) {
+  return request({
+    url: `/admin/user/update`,
+    method: 'post',
+    data
+  })
+}
+
+export function saveUser(data) {
+  return request({
+    url: `/admin/user/save`,
+    method: 'post',
+    data
+  })
+}
