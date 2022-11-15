@@ -1,6 +1,20 @@
 <template>
   <div class="app-container">
-    角色列表
+    <el-form ref="form" :model="form" :inline="true" style="margin-top: 10px" size="mini">
+      <el-form-item label="角色编码">
+        <el-input v-model="form.roleCode"></el-input>
+      </el-form-item>
+      <el-form-item label="角色名称">
+        <el-input v-model="form.roleName"></el-input>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" icon="el-icon-search" @click="fetchData(1, size)">搜索</el-button>
+        <el-button plain icon="el-icon-search" @click="resetSearchForm">重置</el-button>
+      </el-form-item>
+    </el-form>
+    <div class="tool-container">
+      <el-button type="primary" size="mini" class="tool-btn" icon="el-icon-plus" @click="add">新增</el-button>
+    </div>
     <el-table
       v-loading="loading"
       :data="records"
@@ -28,51 +42,92 @@
         prop="updateTime"
         label="最后更新时间">
       </el-table-column>
-      <el-table-column
-        prop=""
-        label="操作">
-        <el-button type="primary" icon="el-icon-edit" circle></el-button>
-        <el-button type="danger" icon="el-icon-delete" circle></el-button>
+      <el-table-column label="操作" align="center">
+        <template v-slot="scope">
+          <el-button type="primary" icon="el-icon-edit" size="mini" @click="edit(scope.row)"></el-button>
+          <el-button size="mini" type="danger" icon="el-icon-delete" @click="deleteRole(scope.row)"></el-button>
+        </template>
       </el-table-column>
     </el-table>
+
+    <el-pagination
+      @size-change="handleSizeChange"
+      @current-change="handleCurrentChange"
+      :current-page="page"
+      :page-sizes="[10, 20, 30, 40, 50, 100]"
+      :page-size="size"
+      layout="total, sizes, prev, pager, next, jumper"
+      :total="total">
+    </el-pagination>
+    <add-form ref="addForm"/>
   </div>
 </template>
 
 <script>
-import {pageRoles} from '@/api/role'
+import {pageRoles, deleteRole} from '@/api/role'
+import AddForm from "./addForm";
 
 export default {
   name: "index",
+  components: {AddForm},
   data() {
     return {
       loading: false,
       records: [],
       total: 0,
       page: 1,
-      size: 3,
-      searchParams: {}
+      size: 10,
+      searchParams: {},
+      form: {
+        roleCode: '',
+        roleName: ''
+      }
     }
   },
   created() {
-    console.log('created...')
     this.fetchData(this.page, this.size)
   },
   methods: {
     fetchData(page, size) {
       this.loading = true
+      this.searchParams = this.form
       pageRoles({
         page,
-        size
+        size,
+        ...this.searchParams
       }).then(res => {
         this.loading = false
         this.records = res.data.records
         this.total = res.data.total
       })
-    }
+    },
+    handleSizeChange(size) {
+      this.fetchData(1, size)
+    },
+    handleCurrentChange(page) {
+      this.fetchData(page, this.size)
+    },
+    resetSearchForm() {
+      this.form = {}
+      this.fetchData(1, this.size)
+    },
+    deleteRole(role) {
+      deleteRole(role.id).then((_) => {
+        this.fetchData(1, this.size)
+      })
+    },
+    edit(role) {
+      this.$refs.addForm.dialog = true
+      this.$refs.addForm.form = JSON.parse(JSON.stringify(role))
+    },
   }
 }
 </script>
 
 <style scoped>
-
+.tool-container {
+  width: 100%;
+  text-align: right;
+  margin-bottom: 10px;
+}
 </style>
